@@ -185,8 +185,8 @@ class GoatUser:
         self.id = user_id
 
     def get_full_name(self) -> str:
-        if len(self.first_name) > 0 and len(self.last_name) > 0:
+        if self.first_name is not None and len(self.first_name) > 0 and self.last_name is not None and len(self.last_name) > 0:
             return f'{self.first_name} {self.last_name}'
-        elif len(self.first_name) > 0:
+        elif self.first_name is not None and len(self.first_name) > 0:
             return self.first_name
-        return self.last_name
+        return self.last_name if self.last_name is not None else self.user_name

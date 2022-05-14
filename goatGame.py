@@ -27,7 +27,10 @@ class GoatGame:
         self.second_team_total_score = 0
 
     def add_player(self, player: int) -> bool:
-        logging.debug('GoatGame.add_player({0}) called', player)
+        if self.player1_id == player or self.player2_id == player or \
+                self.player3_id == player or self.player4_id == player:
+            return False
+        logging.debug(f'GoatGame.add_player({player}) called')
         if self.player2_id < 0:
             self.player2_id = player
             return True
@@ -55,6 +58,7 @@ class GoatGame:
         if self.need_player_count() != 0:
             return
         self.deal = AllCardsDeal(0)
+        self._apply_deal_handlers(self.deal)
         self.deal.process_deal()
 
     def get_player_cards(self, player_id: int) -> list[Card]:
@@ -83,7 +87,7 @@ class GoatGame:
         return self.deal.is_wait_for_trump()
 
     def do_player_step(self, player_id: int, card: Card) -> True:  # TODO request should be from deals?
-        logging.debug('GoatGame.do_player_step({0}, {1}) called', player_id, card.to_string())
+        logging.debug(f'GoatGame.do_player_step({player_id}, {card.to_string()}) called')
         player_index = self.get_player_index_by_id(player_id)
         if self.deal.player_index != player_index:
             return False
@@ -97,8 +101,8 @@ class GoatGame:
         return True
 
     def do_player_pants_step(self, player_id: int, left_card: Card, right_card: Card) -> bool:
-        logging.debug('GoatGame.do_player_pants_step({0}, {1}, {2}) called',
-                      player_id, left_card.to_string(), right_card.to_string())
+        logging.debug(f'GoatGame.do_player_pants_step'
+                      f'({player_id}, {left_card.to_string()}, {right_card.to_string()}) called')
         if self.deal.get_deal_type() != DealType.PANTS:
             return False
         player_index = self.get_player_index_by_id(player_id)
@@ -115,7 +119,7 @@ class GoatGame:
         self.request_ask_for_deal_handler(self.get_player_id_by_index(current_owner_index))
 
     def is_wait_for_player_card(self, player_id: int):
-        logging.debug('GoatGame.is_wait_for_player_card({0}) called', player_id)
+        logging.debug(f'GoatGame.is_wait_for_player_card({player_id}) called')
         player_index = self.get_player_index_by_id(player_id)
         return self.deal.player_index == player_index
 
@@ -145,7 +149,7 @@ class GoatGame:
         return self.get_player_id_by_index(next_owner_index)
 
     def start_next_deal(self, player_id: int, deal_name: str) -> bool:
-        logging.debug('GoatGame.start_next_deal({0}, {1}) called', player_id, deal_name)
+        logging.debug(f'GoatGame.start_next_deal({player_id}, {deal_name}) called')
         if not self.deal.is_completed() or self.get_next_deal_owner() != player_id:
             return False
         if not DealTypes().is_deal(deal_name):
@@ -191,7 +195,7 @@ class GoatGame:
             self.second_team_total_score += 4 if first_team_score < 30 else 2
 
     def _on_jackpot(self, winner_team_index: int):
-        logging.debug('GoatGame._on_jackpot({0}) called', winner_team_index)
+        logging.debug(f'GoatGame._on_jackpot({winner_team_index}) called')
         if winner_team_index == 0:
             self.first_team_total_score += 4
         else:

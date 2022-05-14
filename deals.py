@@ -18,7 +18,7 @@ class Deal:
     request_show_jackpot_handler = None
 
     def __init__(self, owner_index: int):
-        logging.debug('Deal construct owner_index: {0}', owner_index)
+        logging.debug(f'Deal construct owner_index: {owner_index}')
         self.is_started = False
         self.deck = Deck()
         self.deck.shuffle()
@@ -38,12 +38,12 @@ class Deal:
         raise NotImplementedError()
 
     def get_player_cards(self, player_index: int) -> list:
-        logging.debug('Deal.get_player_cards({0}) called', player_index)
+        logging.debug(f'Deal.get_player_cards({player_index}) called')
         cards = {0: self.player1_cards, 1: self.player2_cards, 2: self.player3_cards, 3: self.player4_cards}
         return cards.get(player_index)
 
     def _remove_player_card(self, player_index: int, card: Card):
-        logging.debug('Deal._remove_player_card({0}, {1}) called', player_index, card.to_string())
+        logging.debug(f'Deal._remove_player_card({player_index}, {card.to_string()}) called')
         player_cards = self.get_player_cards(player_index)
         index = -1
         for i in range(0, len(player_cards)):
@@ -54,14 +54,14 @@ class Deal:
 
     @staticmethod
     def _get_team_index_by_player_index(player_index: int) -> int:
-        logging.debug('Deal._get_team_index_by_player_index({0}) called', player_index)
+        logging.debug(f'Deal._get_team_index_by_player_index({player_index}) called')
         if player_index == 0 or player_index == 2:
             return 0
         else:
             return 1
 
     def _get_team_taken_cards(self, team_index: int) -> list[Card]:
-        logging.debug('Deal._get_team_taken_cards({0}) called', team_index)
+        logging.debug(f'Deal._get_team_taken_cards({team_index}) called')
         if team_index == 0:
             return self.team1_cards
         else:
@@ -69,15 +69,15 @@ class Deal:
 
     @staticmethod
     def _calc_score(cards: list) -> int:
-        logging.debug('Deal._calc_score({0}) called', " ".join([x.to_string() for x in cards]))
+        logging.debug(f'Deal._calc_score({" ".join([x.to_string() for x in cards])}) called')
         total_score = 0
         for card in cards:
             total_score += card['card'].get_value()
-        logging.debug('Deal._calc_score result {0}', total_score)
+        logging.debug(f'Deal._calc_score result {total_score}')
         return total_score
 
     def get_team_score(self, team_index: int) -> int:
-        logging.debug('Deal.get_team_score({0}) called', team_index)
+        logging.debug(f'Deal.get_team_score({team_index}) called')
         return self._calc_score(self._get_team_taken_cards(team_index))
 
     def _process_jackpot(self):
@@ -98,7 +98,7 @@ class Deal:
                 if card['card'].greaterThan(self.cards[i]['card'], self.trump):
                     current_owner = self.cards[i]['owner']
                 card = self.cards[i]
-        logging.debug('Deal._process_bribe owner: {0} card: {1}', current_owner, card.to_string())
+        logging.debug(f'Deal._process_bribe owner: {current_owner} card: {card.to_string()}')
         self._get_team_taken_cards(self._get_team_index_by_player_index(current_owner)).extend(self.cards)
         self.cards_history.append(self.cards.copy())
         self.cards.clear()
@@ -109,8 +109,11 @@ class Deal:
 
     def is_completed(self):
         logging.debug('Deal.is_completed called')
-        return self.is_started and len(self.player1_cards) == 0 and len(self.player2_cards) == 0 \
-               and len(self.player3_cards) == 0 and len(self.player4_cards) == 0
+        return self.is_started \
+            and len(self.player1_cards) == 0 \
+            and len(self.player2_cards) == 0 \
+            and len(self.player3_cards) == 0 \
+            and len(self.player4_cards) == 0
 
     def _check_for_jackpot(self) -> bool:
         logging.debug('Deal._check_for_jackpot called')
@@ -121,7 +124,7 @@ class Deal:
                 is_six_exists = True
             if card_obj['card'].suit == CardSuit.CLUBS and card_obj['card'].kind == CardKind.QUEEN:
                 is_queen_exists = True
-        logging.debug('Deal._check_for_jackpot is_queen_exists: {0} is_six_exists: {1}', is_queen_exists, is_six_exists)
+        logging.debug(f'Deal._check_for_jackpot is_queen_exists: {is_queen_exists} is_six_exists: {is_six_exists}')
         return is_queen_exists and is_six_exists
 
     def _get_jackpot_winner(self) -> int:
@@ -139,7 +142,7 @@ class Deal:
         return -1
 
     def do_player_step(self, player_index: int, card: Card) -> StepResult:
-        logging.debug('Deal.do_player_step({0}, {1}) called', player_index, card.to_string())
+        logging.debug(f'Deal.do_player_step({player_index}, {card.to_string()}) called')
         if self.player_index != player_index:
             return StepResult.ERROR
         self.cards.append({'card': card, 'owner': player_index})
@@ -180,7 +183,7 @@ class Deal:
         pass
 
     def set_trump(self, trump: CardSuit):
-        logging.debug('Deal.set_trump({0}) called', trump)
+        logging.debug(f'Deal.set_trump({trump}) called')
         self.is_started = True
         self.trump = trump
         self.after_set_trump()
@@ -200,7 +203,8 @@ class Deal:
 
     @staticmethod
     def _get_bribe_data(bribe: list, trump: CardSuit) -> (list[Card], Card, int):
-        logging.debug('Deal._get_bribe_data({0}, {1}) called', " ".join([f'[{x["card"].to_string()} {x["owner"]}]' for x in bribe]), trump)
+        bribe_str = " ".join([f'[{x["card"].to_string()} {x["owner"]}]' for x in bribe])
+        logging.debug(f'Deal._get_bribe_data({bribe_str}, {trump}) called')
         result = []
         top_card = None
         top_card_owner = -1
@@ -220,7 +224,7 @@ class AllCardsDeal(Deal):
     DEFAULT_TRUMP_CARD = Card(CardKind.ACE, CardSuit.DIAMONDS)
 
     def __init__(self, owner_index: int):
-        logging.debug('AllCardsDeal constructor called {0}', owner_index)
+        logging.debug(f'AllCardsDeal constructor called {owner_index}')
         super().__init__(owner_index)
 
     def get_deal_type(self):
@@ -234,12 +238,10 @@ class AllCardsDeal(Deal):
             self.player3_cards.append(self.deck.get_next())
             self.player4_cards.append(self.deck.get_next())
         self._update_owner()
-        logging.debug('AllCardsDeal.process_deal completed: {0};{1};{2};{3} {4}',
-                      " ".join([x.to_string() for x in self.player1_cards]),
-                      " ".join([x.to_string() for x in self.player2_cards]),
-                      " ".join([x.to_string() for x in self.player3_cards]),
-                      " ".join([x.to_string() for x in self.player4_cards]),
-                      self.owner_index)
+        logging.debug(f'AllCardsDeal.process_deal completed: {" ".join([x.to_string() for x in self.player1_cards])};'
+                      f'{" ".join([x.to_string() for x in self.player2_cards])};'
+                      f'{" ".join([x.to_string() for x in self.player3_cards])};'
+                      f'{" ".join([x.to_string() for x in self.player4_cards])} {self.owner_index}')
         self.request_send_current_cards_to_pm_handler(self.owner_index)
         self.request_trump_handler(self.owner_index)
 
@@ -264,7 +266,7 @@ class AllCardsDeal(Deal):
         return previous_taken
 
     def _get_owner_internal(self, cards: list[Card], index: int) -> bool:
-        logging.debug('AllCardsDeal._get_owner_internal({0}, {1}) called', " ".join([x.to_string() for x in cards]), index)
+        logging.debug(f'AllCardsDeal._get_owner_internal({" ".join([x.to_string() for x in cards])}, {index}) called')
         for current in cards:
             if self.DEFAULT_TRUMP_CARD.equals(current):
                 self.owner_index = index
@@ -280,7 +282,7 @@ class AllCardsDeal(Deal):
 
 class NumDeal(Deal):
     def __init__(self, owner_index: int):
-        logging.debug('NumDeal constructor {0} called', owner_index)
+        logging.debug(f'NumDeal constructor {owner_index} called')
         super().__init__(owner_index)
 
     def get_deal_type(self) -> DealType:
@@ -332,7 +334,7 @@ class NumDeal(Deal):
 
 class TwoDeal(NumDeal):
     def __init__(self, owner_index: int):
-        logging.debug('TwoDeal constructor {0} called', owner_index)
+        logging.debug(f'TwoDeal constructor {owner_index} called')
         super().__init__(owner_index)
 
     def _get_cards_count(self) -> int:
@@ -341,7 +343,7 @@ class TwoDeal(NumDeal):
 
 class ThreeDeal(NumDeal):
     def __init__(self, owner_index: int):
-        logging.debug('ThreeDeal constructor {0} called', owner_index)
+        logging.debug(f'ThreeDeal constructor {owner_index} called')
         super().__init__(owner_index)
 
     def _get_cards_count(self) -> int:
@@ -350,7 +352,7 @@ class ThreeDeal(NumDeal):
 
 class FourDeal(NumDeal):
     def __init__(self, owner_index: int):
-        logging.debug('FourDeal constructor {0} called', owner_index)
+        logging.debug(f'FourDeal constructor {owner_index} called')
         super().__init__(owner_index)
 
     def _get_cards_count(self) -> int:
@@ -369,7 +371,7 @@ class PantsDeal(Deal):
     request_show_current_pants_handler = None
 
     def __init__(self, owner_index: int):
-        logging.debug('PantsDeal constructor {0} called', owner_index)
+        logging.debug(f'PantsDeal constructor {owner_index} called')
         super().__init__(owner_index)
         self.is_trump_received = False
         self.player_cards_count = {0: 0, 1: 0, 2: 0, 3: 0}
@@ -394,7 +396,7 @@ class PantsDeal(Deal):
         raise NotImplementedError()
 
     def process_step_cards(self, player_index: int) -> bool:
-        logging.debug('PantsDeal.process_step_cards({0}) called', player_index)
+        logging.debug(f'PantsDeal.process_step_cards({player_index}) called')
         user_cards = self.get_player_cards(player_index)
         if self.player_cards_count[player_index] == 8:
             last_card = user_cards.pop(-1)
@@ -413,7 +415,7 @@ class PantsDeal(Deal):
         return True
 
     def can_player_make_step(self, player_index: int) -> bool:
-        logging.debug('PantsDeal.can_player_make_step({0}) called', player_index)
+        logging.debug(f'PantsDeal.can_player_make_step({player_index}) called')
         non_trump_count = 0
         player_cards = self.get_player_cards(player_index)
         for card in player_cards:
@@ -422,7 +424,7 @@ class PantsDeal(Deal):
         return non_trump_count >= 2
 
     def _get_card_list_for_pants(self, player_index: int) -> list[Card]:
-        logging.debug('PantsDeal._get_card_list_for_pants({0}) called', player_index)
+        logging.debug(f'PantsDeal._get_card_list_for_pants({player_index}) called')
         player_cards = self.get_player_cards(player_index)
         result = []
         for card in player_cards:
@@ -442,7 +444,7 @@ class PantsDeal(Deal):
             self.player_cards_count[min_card_player_index] += 1
 
     def _get_min_card_count_index(self, start_index: int) -> int:
-        logging.debug('PantsDeal._get_min_card_count_index({0}) called', start_index)
+        logging.debug(f'PantsDeal._get_min_card_count_index({start_index}) called')
         curr_start_index = start_index
         min_card_count = 8
         min_card_player_index = -1
@@ -485,16 +487,16 @@ class PantsDeal(Deal):
 
 class SinglePantsDeal(PantsDeal):
     def __init__(self, owner_index: int):
-        logging.debug('SinglePantsDeal constructor {0} called', owner_index)
+        logging.debug(f'SinglePantsDeal constructor {owner_index} called')
         super().__init__(owner_index)
         self.pant_cards = []
 
     def get_cards_for_pants(self, player_index: int) -> list:
-        logging.debug('SinglePantsDeal.get_cards_for_pants({0}) called', player_index)
+        logging.debug(f'SinglePantsDeal.get_cards_for_pants({player_index}) called')
         return self._get_card_list_for_pants(player_index)
 
     def set_pant_card(self, player_index: int, cards) -> bool:
-        logging.debug('SinglePantsDeal.set_pant_card({0}, {1}) called', player_index, cards)
+        logging.debug(f'SinglePantsDeal.set_pant_card({player_index}, {cards}) called')
         if len(cards) != 1:
             return False
         card = cards[0]
@@ -539,11 +541,11 @@ class SinglePantsDeal(PantsDeal):
         return result
 
     def _can_take_cards(self, player_index: int) -> bool:
-        logging.debug('SinglePantsDeal._car_take_cards({0}) called', player_index)
+        logging.debug(f'SinglePantsDeal._car_take_cards({player_index}) called')
         return self.player_cards_count[player_index] <= 4
 
     def _process_start_cards(self, player_index: int):
-        logging.debug('SinglePantsDeal._process_start_cards({0}) called', player_index)
+        logging.debug(f'SinglePantsDeal._process_start_cards({player_index}) called')
         user_cards = self.get_player_cards(player_index)
         user_cards.append(self.deck.get_next())
         user_cards.append(self.deck.get_last())
@@ -552,17 +554,17 @@ class SinglePantsDeal(PantsDeal):
 
 class DoublePantsDeal(PantsDeal):
     def __init__(self, owner_index: int):
-        logging.debug('DoublePantsDeal constructor {0} called', owner_index)
+        logging.debug(f'DoublePantsDeal constructor {owner_index} called')
         super().__init__(owner_index)
         self.left_pant_cards = []
         self.right_pant_cards = []
 
     def get_cards_for_pants(self, player_index: int) -> list:
-        logging.debug('DoublePantsDeal.get_cards_for_pants({0}) called', player_index)
+        logging.debug(f'DoublePantsDeal.get_cards_for_pants({player_index}) called')
         return list(permutations(self._get_card_list_for_pants(player_index), 2))
 
     def set_pant_card(self, player_index: int, cards) -> bool:
-        logging.debug('DoublePantsDeal.set_pant_card({0}, {1}) called', player_index, cards)
+        logging.debug(f'DoublePantsDeal.set_pant_card({player_index}, {cards}) called')
         if len(cards) != 2:
             return False
         left_card, right_card = cards
@@ -618,11 +620,11 @@ class DoublePantsDeal(PantsDeal):
         return result
 
     def _can_take_cards(self, player_index: int) -> bool:
-        logging.debug('DoublePantsDeal._can_take_cards({0}) called', player_index)
+        logging.debug(f'DoublePantsDeal._can_take_cards({player_index}) called')
         return self.player_cards_count[player_index] <= 2
 
     def _process_start_cards(self, player_index: int):
-        logging.debug('DoublePantsDeal._process_start_cards({0}) called', player_index)
+        logging.debug(f'DoublePantsDeal._process_start_cards({player_index}) called')
         user_cards = self.get_player_cards(player_index)
         user_cards.append(self.deck.get_next())
         user_cards.append(self.deck.get_next())
@@ -636,7 +638,7 @@ class DealTypes:
 
     @staticmethod
     def get_deal(name: str, player_index: int) -> Deal | None:
-        logging.debug('DealTypes.get_deal({0}, {1}) called', name, player_index)
+        logging.debug(f'DealTypes.get_deal({name}, {player_index}) called')
         if name == 'По всем':
             return AllCardsDeal(player_index)
         if name == 'По 2':
@@ -652,5 +654,5 @@ class DealTypes:
         return None
 
     def is_deal(self, text: str) -> bool:
-        logging.debug('DealTypes.is_deal({0}) called', text)
+        logging.debug(f'DealTypes.is_deal({text}) called')
         return text.lower() in [x.lower() for x in self.names]
